@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Box, Typography } from "@material-ui/core";
 import { makeStyles } from "@material-ui/core/styles";
+import { connect } from "react-redux";
+import { readMessages } from "../../store/utils/thunkCreators";
 
 const useStyles = makeStyles((theme) => ({
   root: {
@@ -8,6 +10,7 @@ const useStyles = makeStyles((theme) => ({
     justifyContent: "space-between",
     marginLeft: 20,
     flexGrow: 1,
+    alignItems: "center"
   },
   username: {
     fontWeight: "bold",
@@ -18,13 +21,58 @@ const useStyles = makeStyles((theme) => ({
     color: "#9CADC8",
     letterSpacing: -0.17,
   },
+  unreadText: {
+    color: "black",
+    fontWeight: "bold",
+    fontSize: theme.typography.fontSize
+  },
+  unreadMsgCount: {
+    marginRight: 20,
+    color: "white",
+    letterSpacing: -0.2,
+    padding: "2px 9px",
+    backgroundColor: theme.palette.primary.main,
+    borderRadius: "45%",
+    fontSize: theme.typography.fontSize,
+    fontWeight: "bold"
+  }
 }));
 
 const ChatContent = (props) => {
   const classes = useStyles();
 
-  const { conversation } = props;
+  const { conversation, activeConversation, readMessages } = props;
   const { latestMessageText, otherUser } = conversation;
+
+  const [unreadMsgCount, setUnreadMsgCount] = useState(0);
+
+  useEffect(() => {
+    setUnreadMsgCount(conversation.unreadMsgCount);
+  }, [conversation]);
+
+  useEffect(() => {
+    const updateMsgReadStatus = async () => {
+      if (
+        conversation.otherUser.username === activeConversation &&
+        unreadMsgCount > 0
+      ) {
+        const reqBody = {
+          senderId: otherUser.id,
+          conversationId: conversation.id,
+        };
+        await readMessages(reqBody);
+      }
+    };
+
+    updateMsgReadStatus();
+  }, [
+    unreadMsgCount,
+    activeConversation,
+    otherUser,
+    conversation.otherUser.username,
+    conversation.id,
+    readMessages,
+  ]);
 
   return (
     <Box className={classes.root}>
@@ -32,12 +80,31 @@ const ChatContent = (props) => {
         <Typography className={classes.username}>
           {otherUser.username}
         </Typography>
-        <Typography className={classes.previewText}>
+        <Typography className={`${classes.previewText} ${unreadMsgCount > 0 ? classes.unreadText : ""}`}>
           {latestMessageText}
         </Typography>
       </Box>
+      {unreadMsgCount > 0 && (
+        <Typography className={classes.unreadMsgCount}>
+          {unreadMsgCount}
+        </Typography>
+      )}
     </Box>
   );
 };
 
-export default ChatContent;
+const mapStateToProps = (state) => {
+  return {
+    activeConversation: state.activeConversation,
+  };
+};
+
+const mapDispatchToProps = (dispatch) => {
+  return {
+    readMessages: (messagesInfo) => {
+      dispatch(readMessages(messagesInfo));
+    },
+  };
+};
+
+export default connect(mapStateToProps, mapDispatchToProps)(ChatContent);
