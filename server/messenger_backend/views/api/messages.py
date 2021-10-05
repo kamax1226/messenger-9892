@@ -14,13 +14,20 @@ class Messages(APIView):
 
             if user.is_anonymous:
                 return HttpResponse(status=401)
-
+                
             sender_id = user.id
+
             body = request.data
+            
             conversation_id = body.get("conversationId")
             text = body.get("text")
             recipient_id = body.get("recipientId")
             sender = body.get("sender")
+
+            if sender:
+                if sender != sender_id:
+                    return HttpResponse(status=400)
+            
             isRead = False
 
             # if we already know conversation id, we can save time and just add it to message and return
@@ -73,6 +80,6 @@ class Messages(APIView):
                     message.isRead = True
                     message.save()
 
-                return HttpResponse(status=200)
+                return HttpResponse(status=204)
         except Exception as e:
             return HttpResponse(status=500)

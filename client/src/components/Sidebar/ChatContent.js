@@ -21,16 +21,16 @@ const useStyles = makeStyles((theme) => ({
     color: "#9CADC8",
     letterSpacing: -0.17,
   },
-  unreadText: {
-    color: "black",
-    fontWeight: "bold",
-    fontSize: theme.typography.fontSize
-  },
+  unreadText: (props) => ({
+    color: props.color,
+    fontWeight: props.fontWeight,
+    fontSize: props.fontSize
+  }),
   unreadMsgCount: {
     marginRight: 20,
     color: "white",
     letterSpacing: -0.2,
-    padding: "2px 9px",
+    padding: theme.spacing(0.5, 1.2),
     backgroundColor: theme.palette.primary.main,
     borderRadius: "45%",
     fontSize: theme.typography.fontSize,
@@ -39,7 +39,6 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const ChatContent = (props) => {
-  const classes = useStyles();
 
   const { conversation, activeConversation, readMessages } = props;
   const { latestMessageText, otherUser } = conversation;
@@ -74,13 +73,22 @@ const ChatContent = (props) => {
     readMessages,
   ]);
 
+  const styleProps = unreadMsgCount > 0 && {
+    color: "black",
+    fontWeight: "bold",
+    fontSize: "theme.typography.fontSize"
+  }
+
+  const classes = useStyles(styleProps);
+
   return (
     <Box className={classes.root}>
       <Box>
         <Typography className={classes.username}>
           {otherUser.username}
         </Typography>
-        <Typography className={`${classes.previewText} ${unreadMsgCount > 0 ? classes.unreadText : ""}`}>
+        {/* <Typography className={`${classes.previewText} ${unreadMsgCount > 0 ? classes.unreadText : ""}`}> */}
+        <Typography className={`${classes.previewText} ${classes.unreadText}`}>
           {latestMessageText}
         </Typography>
       </Box>

@@ -90,7 +90,6 @@ export const reloadConversationInStore = (state, conversationId) => {
       const newConvo = { ...convo };
 
       newConvo.unreadMsgCount = 0;
-      newConvo.lastReadMessageId = convo.messages[convo.messages.length - 1].id;
       newConvo.messages = convo.messages.map((message) => {
         return { ...message, isRead: true };
       });

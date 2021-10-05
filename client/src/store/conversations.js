@@ -21,7 +21,6 @@ const RELOAD_CONVERSATION = 'RELOAD_CONVERSATION';
 // ACTION CREATORS
 
 export const gotConversations = (conversations) => {
-  console.log("action", conversations);
   return {
     type: GET_CONVERSATIONS,
     conversations,

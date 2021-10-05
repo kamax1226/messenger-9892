@@ -55,6 +55,8 @@ class Conversations(APIView):
                     isRead=True,
                 ).last()
 
+                print("last", lastReadMessage.id)
+
                 if lastReadMessage:
                     convo_dict["lastReadMessageId"] = lastReadMessage.id
                 else:
