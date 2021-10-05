@@ -14,19 +14,27 @@ class Messages(APIView):
 
             if user.is_anonymous:
                 return HttpResponse(status=401)
-
+                
             sender_id = user.id
+
             body = request.data
+            
             conversation_id = body.get("conversationId")
             text = body.get("text")
             recipient_id = body.get("recipientId")
             sender = body.get("sender")
 
+            if sender:
+                if sender != sender_id:
+                    return HttpResponse(status=400)
+            
+            isRead = False
+
             # if we already know conversation id, we can save time and just add it to message and return
             if conversation_id:
                 conversation = Conversation.objects.filter(id=conversation_id).first()
                 message = Message(
-                    senderId=sender_id, text=text, conversation=conversation
+                    senderId=sender_id, text=text, conversation=conversation, isRead=isRead
                 )
                 message.save()
                 message_json = message.to_dict()
@@ -42,9 +50,36 @@ class Messages(APIView):
                 if sender and sender["id"] in online_users:
                     sender["online"] = True
 
-            message = Message(senderId=sender_id, text=text, conversation=conversation)
+            message = Message(senderId=sender_id, text=text, conversation=conversation, isRead=isRead)
             message.save()
             message_json = message.to_dict()
             return JsonResponse({"message": message_json, "sender": sender})
+        except Exception as e:
+            return HttpResponse(status=500)
+    def put(self, request):
+        try:
+            user = get_user(request)
+
+            if user.is_anonymous:
+                return HttpResponse(status=401)
+                
+            
+            body = request.data
+            conversation_id = body.get("conversationId")
+            sender_id = body.get("senderId")
+
+            # if we already know conversation id, we can save time and just add it to message and return
+            if conversation_id and sender_id:
+                conversation = Conversation.objects.filter(id=conversation_id).first()
+
+                messages = (
+                    Message.objects.filter(senderId=sender_id, conversation=conversation).all()
+                )
+
+                for message in messages:
+                    message.isRead = True
+                    message.save()
+
+                return HttpResponse(status=204)
         except Exception as e:
             return HttpResponse(status=500)

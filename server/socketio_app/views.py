@@ -1,6 +1,7 @@
 async_mode = None
 
 import os
+from messenger_backend.models import Conversation
 
 import socketio
 from online_users import online_users
@@ -36,3 +37,7 @@ def logout(sid, user_id):
     if user_id in online_users:
         online_users.remove(user_id)
     sio.emit("remove-offline-user", user_id, skip_sid=sid)
+
+@sio.on("read-messages")
+def read_messages(sid, conversationId):
+    sio.emit("read-messages", conversationId)

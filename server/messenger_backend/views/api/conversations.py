@@ -6,6 +6,7 @@ from messenger_backend.models import Conversation, Message
 from online_users import online_users
 from rest_framework.views import APIView
 from rest_framework.request import Request
+import json
 
 
 class Conversations(APIView):
@@ -37,7 +38,7 @@ class Conversations(APIView):
                 convo_dict = {
                     "id": convo.id,
                     "messages": [
-                        message.to_dict(["id", "text", "senderId", "createdAt"])
+                        message.to_dict(["id", "text", "senderId", "createdAt", "isRead"])
                         for message in convo.messages.all()
                     ],
                 }
@@ -45,6 +46,21 @@ class Conversations(APIView):
                 # set properties for notification count and latest message preview
                 length = len(convo_dict["messages"])
                 convo_dict["latestMessageText"] = convo_dict["messages"][length - 1]["text"]
+                
+                convo_dict["unreadMsgCount"] = Message.objects.filter(conversation=convo_dict["id"], isRead=False).exclude(senderId=user_id).count()
+                
+                lastReadMessage = Message.objects.filter(
+                    conversation=convo_dict["id"],
+                    senderId=user.id,
+                    isRead=True,
+                ).last()
+
+                print("last", lastReadMessage.id)
+
+                if lastReadMessage:
+                    convo_dict["lastReadMessageId"] = lastReadMessage.id
+                else:
+                    convo_dict["lastReadMessageId"] = -1
 
                 # set a property "otherUser" so that frontend will have easier access
                 user_fields = ["id", "username", "photoUrl"]
